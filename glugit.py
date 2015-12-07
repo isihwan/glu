@@ -5,7 +5,7 @@ import datetime
 import fnmatch, re
 import logging
 
-logging.basicConfig(level=logging.WARNING)
+logging.basicConfig(level=logging.DEBUG)
 
 MESSAGE = "message"
 DIFF = "diff"
@@ -51,7 +51,18 @@ class Git:
 			logging.debug("scaned %s", commit.message)
 			m = query_regex.match(commit.message)
 			if m:
-				dispatcher.send(signal=MESSAGE, sender={'signal': MESSAGE})
+				dispatcher.send(signal=MESSAGE, sender={'signal': MESSAGE, 'message' : commit.message, 'commit' : commit.hexsha})
+		prev_commit = None
+		diffs = []
 		for commit in scan_commits:
-			pass
+			if prev_commit:
+				diffs.append({'diff' : commit.diff(prev_commit, create_patch=True), 'a_sha' : commit.hexsha, 'b_sha' : prev_commit.hexsha})
+			prev_commit = commit
+		for diff in diffs:
+			logging.debug("diff %s - %s", diff['a_sha'], diff['b_sha'])
+			for patch in diff['diff']:
+				b_src = patch.diff
+				m = query_regex.match(b_src)
+				if m:
+					logging.debug("Mached : %s", m.group(0))
 		dispatcher.send(signal=END, sender={'signal': END})

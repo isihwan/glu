@@ -25,7 +25,12 @@ def vers_release():
 	return "a"
 
 def query_handle(sender):
-	print "event ({0})".format(sender['signal'])
+	if (sender['signal'] == glugit.MESSAGE):
+		print "event {0} - {2}\n\t{1}".format(sender['signal'], sender['message'], sender['commit'])
+	elif sender['signal'] == glugit.DIFF:
+		print "event ({0})".format(sender['signal'])
+	elif sender['signal'] == glugit.END:
+		print "event End..."
 
 def main(argv):
 	query = ''
