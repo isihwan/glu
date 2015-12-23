@@ -28,7 +28,8 @@ class Git:
 		self.repo = Repo(repositorySrc)
 
 	def make_query(self, src):
-		query_glob = fnmatch.translate("*" + src + "*");
+		query_glob = fnmatch.translate(src)
+		query_glob = query_glob[0:-7]
 		return re.compile(query_glob)
 
 	def doQuery(self, query, message_h, diff_h=None, end_h=None, s_scope=Scope.Week, author=""):
@@ -49,7 +50,7 @@ class Git:
 		# check in head
 		for commit in scan_commits:
 			logging.debug("scaned %s", commit.message)
-			m = query_regex.match(commit.message)
+			m = query_regex.search(commit.message)
 			if m:
 				dispatcher.send(signal=MESSAGE, sender={'signal': MESSAGE, 'message' : commit.message, 'commit' : commit.hexsha})
 		prev_commit = None
@@ -62,7 +63,8 @@ class Git:
 			logging.debug("diff %s - %s", diff['a_sha'], diff['b_sha'])
 			for patch in diff['diff']:
 				b_src = patch.diff
-				m = query_regex.match(b_src)
+				m = query_regex.search(b_src)
 				if m:
-					logging.debug("Mached : %s", m.group(0))
+					logging.debug(patch)
+					dispatcher.send(signal=DIFF, sender={'signal' : DIFF, 'diff' : patch})
 		dispatcher.send(signal=END, sender={'signal': END})
